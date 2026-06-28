@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Stay SG / Notion Design Tokens ─────────────────────────── */
+:root {
+  /* Backgrounds */
+  --ink-50:   #F7F6F3;
+  --ink-100:  #EEECEA;
+  --ink-200:  #D9D7D2;
+  --ink-300:  #B5B2AB;
+  --ink-400:  #8C8880;
+  --ink-500:  #636058;
+  --ink-600:  #4A4740;
+  --ink-700:  #353330;
+  --ink-800:  #222120;
+  --ink-900:  #141412;
+
+  /* Brand accent */
+  --violet-300: #AFA4FB;
+  --violet-400: #8F7FF9;
+  --violet-500: #7059F6;
+  --violet-600: #5543D4;
+
+  /* Semantic */
+  --bg:       var(--ink-50);
+  --surface:  #FFFFFF;
+  --border:   var(--ink-200);
+  --text:     var(--ink-800);
+  --muted:    var(--ink-400);
+  --accent:   var(--violet-500);
+
+  /* MRT line colours */
+  --mrt-ew: #009645;
+  --mrt-ns: #D42E12;
+  --mrt-cc: #FA9E0D;
+  --mrt-dt: #005EC4;
+  --mrt-ne: #9900AA;
+  --mrt-te: #9D5B25;
+
+  /* Typography scale */
+  --font-sans: 'Hanken Grotesk', 'Noto Sans SC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Layout */
+  --radius-sm:  10px;
+  --radius-md:  18px;
+  --radius-lg:  24px;
+  --radius-xl:  28px;
+  --hairline:   1.5px;
+}
+
+/* ─── Base Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-300); border-radius: 99px; }
+
+/* ─── Selection ───────────────────────────────────────────────── */
+::selection {
+  background: var(--violet-300);
+  color: var(--ink-900);
+}
+
+/* ─── Surface cards ───────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* ─── Star rating ─────────────────────────────────────────────── */
+.star-filled { fill: #F59E0B; stroke: none; }
+.star-empty  { fill: none; stroke: #C7C7CB; stroke-width: 1.5px; }
+
+/* ─── Badge ───────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.badge-new     { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+.badge-pick    { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+.badge-free    { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+.badge-luma    { background: var(--ink-100); color: var(--ink-600); border: 1px solid var(--border); }
+.badge-eb      { background: #FFF1F2; color: #E11D48; border: 1px solid #FFC8D0; }
+.badge-open    { background: #ECFDF5; color: #059669; }
+.badge-full    { background: #FEF2F2; color: #DC2626; }
+.badge-fast    { background: #FFFBEB; color: #D97706; }
+.badge-urgent  { background: #FFF7ED; color: #EA580C; }
+
+/* ─── MRT pill ────────────────────────────────────────────────── */
+.mrt-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px 2px 4px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+}
+.mrt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+/* ─── Leaflet overrides ───────────────────────────────────────── */
+.leaflet-container {
+  font-family: var(--font-sans) !important;
+  border-radius: var(--radius-md);
+}
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  border: var(--hairline) solid var(--border) !important;
+}
+.leaflet-popup-tip { background: var(--surface) !important; }
+
+/* ─── Recharts text ───────────────────────────────────────────── */
+.recharts-text { font-family: var(--font-sans) !important; }
+
+/* ─── Section label ───────────────────────────────────────────── */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}

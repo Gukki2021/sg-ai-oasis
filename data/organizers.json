@@ -1,0 +1,109 @@
+[
+  {
+    "id": "aws-sg",
+    "name": "Amazon Web Services Singapore",
+    "lumaHandle": "aws-sg",
+    "website": "https://aws.amazon.com/sg",
+    "description": "AWS Singapore Region (ap-southeast-1) opened in 2010 — the first AWS region in Southeast Asia. AWS teams here run a dense event calendar covering AI/ML (SageMaker, Bedrock), cloud architecture, and startup programmes. Events tend to be well-produced with strong technical content and attract 200–800 attendees.",
+    "score": 5,
+    "scoreNote": "Tier-1 global cloud provider with dedicated Singapore presence. Consistently high-quality technical content and large audience reach.",
+    "tags": ["AI/ML", "Cloud", "Enterprise", "Free events", "Certification"],
+    "type": "tech_company"
+  },
+  {
+    "id": "lorong-ai",
+    "name": "Lorong AI",
+    "website": "https://lorong.ai",
+    "description": "Singapore's AI hub located at one-north. Lorong AI organises the weekly 'Hermes AI Agent Night' series and is deeply embedded in the Singapore AI startup scene. Strong ties with EDB, AI Singapore, and global VC firms. The recurring Hermes events consistently draw the highest attendance of any AI event in SG (~700+).",
+    "score": 5,
+    "scoreNote": "The definitive home for the Singapore AI builder community. Recurring high-attendance events, strong ecosystem connections.",
+    "tags": ["AI Agents", "Startups", "Community", "one-north", "Weekly events"],
+    "type": "community"
+  },
+  {
+    "id": "clickhouse-apj",
+    "name": "ClickHouse APJ",
+    "website": "https://clickhouse.com",
+    "description": "ClickHouse is the open-source OLAP database powering real-time analytics at scale (used by Cloudflare, ByteDance, Uber). The Singapore APJ team runs technical deep-dives aimed at data engineers and ML practitioners. Events typically include live demos and hands-on labs.",
+    "score": 4,
+    "scoreNote": "Major open-source database company with strong technical credibility. Events are practitioner-level with real substance.",
+    "tags": ["Databases", "Real-time analytics", "Open source", "Data engineering"],
+    "type": "tech_company"
+  },
+  {
+    "id": "anthropic-community",
+    "name": "Claude Community Singapore",
+    "website": "https://anthropic.com",
+    "description": "Official Anthropic-backed community events for builders using Claude. The Singapore chapter runs workshops on prompt engineering, the Claude API, and multi-agent systems. Events attract a mix of developers and enterprise teams evaluating Claude for production use.",
+    "score": 5,
+    "scoreNote": "Backed by Anthropic — one of the world's leading AI safety labs. First-party access to Claude product updates and the API roadmap.",
+    "tags": ["LLMs", "Claude API", "Prompt engineering", "Enterprise AI"],
+    "type": "tech_company"
+  },
+  {
+    "id": "acacia-ai-society",
+    "name": "Acacia AI Society",
+    "website": "https://acacia.sg",
+    "description": "Student-run AI society originating from NUS (National University of Singapore). Organises beginner-friendly workshops, speaker sessions, and competitions for undergrads and early-career professionals. A good entry point into the SG AI community.",
+    "score": 3,
+    "scoreNote": "Student org with good campus reach. Content is beginner-friendly; less relevant for practitioners already in industry.",
+    "tags": ["Student org", "NUS", "Beginner", "Workshops", "Career"],
+    "type": "community"
+  },
+  {
+    "id": "sponsors-in-tech",
+    "name": "Sponsors in Tech",
+    "description": "A community group connecting tech professionals with sponsorship opportunities, career development, and networking events. Primarily targets people navigating tech career transitions, including those leveraging AI tools for productivity.",
+    "score": 3,
+    "scoreNote": "Solid community network. Content is broader than pure AI/tech, skewing more career/professional development.",
+    "tags": ["Career", "Networking", "Professional development"],
+    "type": "community"
+  },
+  {
+    "id": "zenika-sg",
+    "name": "Zenika Singapore",
+    "website": "https://zenika.com",
+    "description": "Zenika is a French tech consultancy with offices in Singapore (and a partnership with Women's Dev Singapore). Events typically cover software engineering trends, DevOps, and emerging tech including AI. They co-organise events that bridge technical depth with diverse community building.",
+    "score": 3,
+    "scoreNote": "Reputable consultancy, solid content. AI events are adjacent rather than core-focus. Good for software practitioners.",
+    "tags": ["Software engineering", "Diversity in tech", "Consultancy"],
+    "type": "tech_company"
+  },
+  {
+    "id": "interlunar",
+    "name": "INTERLUNAR",
+    "description": "Singapore-based startup ecosystem connector running the 'AI For Normies' educational series aimed at non-technical professionals. Events are deliberately accessible — no jargon, practical focus on how AI changes work and business.",
+    "score": 3,
+    "scoreNote": "Good for enterprise professionals and non-engineers learning AI fundamentals. Less relevant for builders and researchers.",
+    "tags": ["Non-technical", "Education", "Enterprise", "Beginner-friendly"],
+    "type": "startup"
+  },
+  {
+    "id": "ceibs-sg",
+    "name": "CEIBS Singapore",
+    "website": "https://www.ceibs.edu",
+    "description": "China Europe International Business School — one of Asia's top MBA programmes. The Singapore campus runs executive-level AI seminars bridging Chinese and global business perspectives. Content leans strategic/managerial rather than technical.",
+    "score": 3,
+    "scoreNote": "Prestigious business school with strong China-Asia network. Events are executive-level and strategic; not for engineers.",
+    "tags": ["MBA", "Strategy", "China", "Executive education", "Academic"],
+    "type": "academic"
+  },
+  {
+    "id": "kc-chettiar",
+    "name": "KC Chettiar",
+    "description": "Singapore-based entrepreneur and speaker running 'AI Bootcamp' sessions targeted at small business owners and appointment-based professionals (salons, clinics, dental practices). Events are practical but narrow in scope, focusing on AI-powered customer acquisition.",
+    "score": 2,
+    "scoreNote": "Niche audience (SME/appointment businesses). Useful for that segment, but limited relevance to the tech builder community.",
+    "tags": ["SME", "Small business", "AI tools", "Marketing"],
+    "type": "individual"
+  },
+  {
+    "id": "menlo-research",
+    "name": "Menlo Research",
+    "description": "AI research organisation running community events on frontier AI topics — agent frameworks, reasoning models, and multi-modal AI. The 'Demo Night' format features lightning demos from builders working on novel AI applications.",
+    "score": 4,
+    "scoreNote": "Strong research orientation with quality builder demos. Attracts people working on the cutting edge of AI.",
+    "tags": ["AI research", "Demos", "Agents", "Frontier AI", "Builder community"],
+    "type": "community"
+  }
+]
