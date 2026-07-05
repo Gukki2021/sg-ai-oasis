@@ -23,17 +23,19 @@ function loadStaticEvents(): SgEvent[] {
   })) as SgEvent[];
 }
 
-// ─── Fetch events (Supabase if configured, else static) ───────
-async function getEvents(): Promise<SgEvent[]> {
+// ─── Fetch all upcoming events (next 30 days) ─────────────────
+async function getMonthEvents(): Promise<SgEvent[]> {
   const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnon) return loadStaticEvents();
   try {
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(supabaseUrl, supabaseAnon);
+    const cutoff   = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     const { data, error } = await supabase
       .from('events_full').select('*')
       .gte('start_at', new Date().toISOString())
+      .lte('start_at', cutoff.toISOString())
       .order('start_at', { ascending: true });
     if (error) throw error;
     return (data ?? []).map((row: any): SgEvent => ({
@@ -56,24 +58,19 @@ async function getEvents(): Promise<SgEvent[]> {
   } catch { return loadStaticEvents(); }
 }
 
-// ─── Filter to this week (today → +7 days) ────────────────────
-function filterThisWeek(events: SgEvent[]): SgEvent[] {
-  const now    = new Date();
-  const cutoff = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  return events.filter((e) => {
-    const d = new Date(e.startAt);
-    return d >= now && d <= cutoff;
-  });
-}
-
-// ─── Group events by day label ─────────────────────────────────
-function groupByDay(events: SgEvent[]) {
+// ─── Group events by week banner ─────────────────────────────
+function groupByWeek(events: SgEvent[]) {
   const groups = new Map<string, SgEvent[]>();
   events.forEach((e) => {
-    const label = new Date(e.startAt).toLocaleDateString('en-SG', {
-      weekday: 'long', month: 'short', day: 'numeric', timeZone: 'Asia/Singapore',
+    const d    = new Date(e.startAt);
+    const mon  = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Monday
+    const sun  = new Date(mon); sun.setDate(mon.getDate() + 6);
+    const fmt  = (dt: Date) => dt.toLocaleDateString('en-SG', {
+      month: 'short', day: 'numeric', timeZone: 'Asia/Singapore',
     });
-    const arr = groups.get(label) ?? [];
+    const label = `${fmt(mon)} – ${fmt(sun)}`;
+    const arr   = groups.get(label) ?? [];
     arr.push(e);
     groups.set(label, arr);
   });
@@ -94,21 +91,28 @@ function getUniqueOrganizers(events: SgEvent[]) {
 }
 
 // ─── Page ─────────────────────────────────────────────────────
-export default async function WeekPage({
+export default async function MonthPage({
   searchParams,
 }: {
   searchParams: { view?: string };
 }) {
-  const view       = searchParams.view || 'cards';
-  const allEvents  = await getEvents();
-  const events     = filterThisWeek(allEvents);
-  const byDay      = groupByDay(events);
+  const view       = searchParams.view || 'list'; // default to list for month
+  const events     = await getMonthEvents();
+  const byWeek     = groupByWeek(events);
   const organizers = getUniqueOrganizers(events);
-  const lastScan   = allEvents[0]?.scrapedAt
-    ? new Date(allEvents[0].scrapedAt).toLocaleString('en-SG', {
+  const lastScan   = events[0]?.scrapedAt
+    ? new Date(events[0].scrapedAt).toLocaleString('en-SG', {
         timeZone: 'Asia/Singapore', dateStyle: 'medium', timeStyle: 'short',
       })
     : '—';
+
+  // Date range label
+  const rangeStart = new Date().toLocaleDateString('en-SG', {
+    month: 'long', day: 'numeric', timeZone: 'Asia/Singapore',
+  });
+  const rangeEnd   = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-SG', {
+    month: 'long', day: 'numeric', timeZone: 'Asia/Singapore',
+  });
 
   return (
     <div className="min-h-dvh bg-[var(--bg)]">
@@ -132,8 +136,8 @@ export default async function WeekPage({
 
           {/* Page nav tabs */}
           <nav className="flex items-center gap-1 bg-[var(--ink-100)] p-1 rounded-[12px]" aria-label="Page">
-            <a href="/"      className="page-nav-tab page-nav-tab--active">本周活动</a>
-            <a href="/month" className="page-nav-tab">本月活动</a>
+            <a href="/"      className="page-nav-tab">本周活动</a>
+            <a href="/month" className="page-nav-tab page-nav-tab--active">本月活动</a>
           </nav>
 
           <p className="text-[11px] text-[var(--muted)] hidden md:block flex-shrink-0">
@@ -149,10 +153,10 @@ export default async function WeekPage({
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              本周 Singapore AI Events
+              未来一个月 AI Events
             </h1>
             <p className="text-sm text-[var(--muted)] mt-1">
-              今后 7 天 · {events.length} 场活动 · 每 6 小时自动更新
+              {rangeStart} — {rangeEnd} · {events.length} 场活动 · 每日自动抓取更新
             </p>
           </div>
           <Suspense fallback={<div className="h-9 w-56 rounded-xl bg-[var(--ink-100)] animate-pulse" />}>
@@ -163,25 +167,13 @@ export default async function WeekPage({
         {/* Stats */}
         <StatsRow events={events} />
 
-        {/* ── Cards view ──────────────────────────────────────── */}
-        {view === 'cards' && (
+        {/* ── List view (完全版, default for month) ───────────── */}
+        {view === 'list' && (
           <>
             <DistributionPanel events={events} />
-            <section className="space-y-8">
-              <p className="section-label">本周活动</p>
-              {Array.from(byDay.entries()).map(([day, dayEvents]) => (
-                <div key={day} className="space-y-4">
-                  <h2 className="text-base font-semibold text-[var(--ink-700)] flex items-center gap-2">
-                    {day}
-                    <span className="px-2 py-0.5 rounded-full bg-[var(--ink-100)] text-[var(--muted)] text-xs font-normal">
-                      {dayEvents.length}
-                    </span>
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {dayEvents.map((event) => <EventCard key={event.id} event={event} />)}
-                  </div>
-                </div>
-              ))}
+            <section>
+              <p className="section-label mb-4">完全版 · 未来 30 天</p>
+              <EventListView events={events} />
             </section>
             <section className="space-y-4">
               <p className="section-label">主办方</p>
@@ -194,29 +186,42 @@ export default async function WeekPage({
           </>
         )}
 
-        {/* ── List view (完全版) ──────────────────────────────── */}
-        {view === 'list' && (
-          <section>
-            <p className="section-label mb-4">完全版 · 全部详情</p>
-            <EventListView events={events} />
-          </section>
+        {/* ── Cards view ──────────────────────────────────────── */}
+        {view === 'cards' && (
+          <>
+            <DistributionPanel events={events} />
+            <section className="space-y-10">
+              <p className="section-label">按周分组</p>
+              {Array.from(byWeek.entries()).map(([week, weekEvents]) => (
+                <div key={week} className="space-y-4">
+                  <h2 className="text-base font-semibold text-[var(--ink-700)] flex items-center gap-2">
+                    <span className="text-[var(--muted)] text-sm font-normal">Week</span> {week}
+                    <span className="px-2 py-0.5 rounded-full bg-[var(--ink-100)] text-[var(--muted)] text-xs font-normal">
+                      {weekEvents.length}
+                    </span>
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {weekEvents.map((event) => <EventCard key={event.id} event={event} />)}
+                  </div>
+                </div>
+              ))}
+            </section>
+          </>
         )}
 
-        {/* ── Map view (地图版) ───────────────────────────────── */}
+        {/* ── Map view ────────────────────────────────────────── */}
         {view === 'map' && (
           <>
             <section className="space-y-3">
-              <p className="section-label">地图分布版 · MRT 导览</p>
+              <p className="section-label">地图分布版 · 本月活动分布</p>
               <EventMap events={events} />
               <p className="text-xs text-[var(--muted)] px-1">
-                紫色大头针 = 活动地点 &nbsp;·&nbsp; 彩色圆圈 = 最近地铁站 &nbsp;·&nbsp; 点击查看详情 &amp; 报名链接
+                紫色大头针 = 活动地点 &nbsp;·&nbsp; 彩色圆圈 = 最近地铁站 &nbsp;·&nbsp; 点击查看详情
               </p>
             </section>
-            <section className="space-y-4">
-              <p className="section-label">本周 {events.length} 场活动</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {events.map((event) => <EventCard key={event.id} event={event} />)}
-              </div>
+            <section>
+              <p className="section-label mb-4">本月全部 {events.length} 场活动</p>
+              <EventListView events={events} />
             </section>
           </>
         )}
@@ -224,9 +229,9 @@ export default async function WeekPage({
 
       {/* ── Footer ───────────────────────────────────────────── */}
       <footer className="border-t border-[var(--border)] mt-16 py-6 text-center text-xs text-[var(--muted)]">
-        SG AI Oasis · 每 6 小时自动更新 via GitHub Actions ·{' '}
+        SG AI Oasis · 每日自动抓取 Luma &amp; Eventbrite · 数据由 GitHub Actions + Supabase 驱动 ·{' '}
         <a href="https://github.com/Gukki2021/sg-ai-oasis" target="_blank" rel="noopener noreferrer"
-           className="text-[var(--violet-500)] hover:underline">View on GitHub</a>
+           className="text-[var(--violet-500)] hover:underline">GitHub</a>
       </footer>
     </div>
   );

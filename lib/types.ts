@@ -50,6 +50,11 @@ export interface SgEvent {
   isCuratorPick: boolean;
   isNew: boolean;
   organizers: Organizer[];
+  // ── Enrichment fields ──────────────────────────
+  oneLiner?: string;        // One-sentence intro for search / preview
+  targetAudience?: string;  // Who should attend
+  findPartner?: string;     // What kind of people to network with there
+  // ──────────────────────────────────────────────
   scrapedAt: string;
   createdAt: string;
 }

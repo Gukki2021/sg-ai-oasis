@@ -2,7 +2,8 @@
 """
 SG AI Oasis — Event Scraper
 Runs on GitHub Actions every 6 hours.
-Fetches Luma + Eventbrite events, enriches with MRT proximity, upserts to Supabase.
+Fetches Luma + Eventbrite events for the NEXT 30 DAYS, enriches with MRT proximity,
+adds audience/partner/oneliner fields, upserts to Supabase.
 
 Usage: python scripts/scrape.py
 Requires env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
@@ -14,7 +15,7 @@ import json
 import math
 import time
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import requests
 from bs4 import BeautifulSoup
@@ -31,10 +32,16 @@ LUMA_SOURCES = [
     'https://lu.ma/singapore',
     'https://lu.ma/ai',
     'https://lu.ma/tech',
+    'https://lu.ma/sg-ai',         # Singapore AI specific
+    'https://lu.ma/lorong-ai',     # Lorong AI weekly events
 ]
 EVENTBRITE_SOURCES = [
     'https://www.eventbrite.com/d/singapore/ai/',
+    'https://www.eventbrite.com/d/singapore/technology/',
 ]
+
+# Scrape window: events starting today up to 30 days from now
+SCRAPE_WINDOW_DAYS = 30
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
@@ -209,13 +216,86 @@ def scrape_eventbrite(url: str) -> list[dict]:
     log.info(f'  → found {len(events)} events via JSON-LD')
     return events
 
-# ─── Enrich event with coordinates + MRT ──────────────────────
+# ─── Auto-generate enrichment fields ────────────────────────
+#     These are lightweight heuristics; curators can override in DB.
+def generate_one_liner(title: str, description: str) -> str:
+    """Return first sentence of description, capped at 120 chars."""
+    text = (description or title or '').strip()
+    # Split on sentence boundary
+    sentence = re.split(r'(?<=[.!?])\s+', text)[0]
+    return sentence[:120] + ('…' if len(sentence) > 120 else '')
+
+def guess_audience(title: str, tags: list, levels: list) -> str:
+    """Simple rule-based audience inference from title/tags/levels."""
+    title_lc = title.lower()
+    tag_str   = ' '.join(tags).lower()
+    level_str = ' '.join(levels)
+
+    if 'executive' in title_lc or 'ceo' in title_lc or 'strategy' in title_lc:
+        return 'Senior executives and business leaders exploring AI strategy'
+    if 'student' in tag_str or 'campus' in tag_str or 'ntu' in title_lc or 'nus' in title_lc:
+        return 'Students and early-career professionals exploring AI'
+    if 'builder' in level_str or 'agent' in title_lc or 'llm' in title_lc:
+        return 'AI engineers and builders shipping LLM-based products'
+    if 'data' in tag_str or 'pipeline' in title_lc or 'database' in title_lc:
+        return 'Data engineers and ML practitioners building AI data systems'
+    if 'beginner' in level_str and 'practitioner' not in level_str:
+        return 'Non-technical professionals and beginners exploring AI tools'
+    if 'career' in title_lc or 'job' in title_lc:
+        return 'Tech professionals navigating career transitions with AI'
+    return 'Tech professionals and AI enthusiasts in Singapore'
+
+def guess_find_partner(title: str, tags: list, levels: list) -> str:
+    title_lc = title.lower()
+    tag_str   = ' '.join(tags).lower()
+    level_str = ' '.join(levels)
+
+    if 'demo' in title_lc:
+        return 'Co-founders, early adopters, angel investors doing product discovery'
+    if 'agent' in title_lc or 'hermes' in title_lc:
+        return 'AI founders, investors, developer tool vendors, potential co-founders'
+    if 'data' in tag_str or 'pipeline' in title_lc:
+        return 'MLOps engineers, AI infra founders, CTOs evaluating data infrastructure'
+    if 'career' in title_lc or 'job' in title_lc:
+        return 'Recruiters, career coaches, HR tech founders'
+    if 'executive' in title_lc or 'strategy' in title_lc:
+        return 'Enterprise AI vendors, management consultants, AI governance experts'
+    if 'builder' in level_str:
+        return 'Technical co-founders, AI product investors, developer tool vendors'
+    return 'AI professionals and community members in Singapore'
+
+# ─── Enrich event with coordinates + MRT + audience fields ────
 def enrich(event: dict) -> dict:
     lat, lng = geocode(event.get('venue', ''))
-    event['venue_lat'] = lat
-    event['venue_lng'] = lng
-    event['mrt_stations'] = get_nearest_mrt(lat, lng)
+    event['venue_lat']     = lat
+    event['venue_lng']     = lng
+    event['mrt_stations']  = get_nearest_mrt(lat, lng)
+    # Only generate if not already set (preserve manual curation)
+    if not event.get('one_liner'):
+        event['one_liner'] = generate_one_liner(
+            event.get('title', ''), event.get('description', ''))
+    if not event.get('target_audience'):
+        event['target_audience'] = guess_audience(
+            event.get('title', ''), event.get('tags', []), event.get('levels', []))
+    if not event.get('find_partner'):
+        event['find_partner'] = guess_find_partner(
+            event.get('title', ''), event.get('tags', []), event.get('levels', []))
     return event
+
+# ─── Filter events to scrape window ───────────────────────────
+def filter_to_window(events: list[dict]) -> list[dict]:
+    now    = datetime.now(timezone.utc)
+    cutoff = now + timedelta(days=SCRAPE_WINDOW_DAYS)
+    valid  = []
+    for e in events:
+        try:
+            start = datetime.fromisoformat(
+                e['start_at'].replace('Z', '+00:00') if e.get('start_at') else '')
+            if now <= start <= cutoff:
+                valid.append(e)
+        except Exception:
+            valid.append(e)  # keep if can't parse date
+    return valid
 
 # ─── Upsert to Supabase ───────────────────────────────────────
 def upsert_events(supabase: Client, events: list[dict]):
@@ -251,11 +331,15 @@ def main():
             seen.add(e['id'])
             unique.append(e)
 
-    log.info(f'Total unique events: {len(unique)}')
+    log.info(f'Total unique events before window filter: {len(unique)}')
 
-    # Enrich with geocoords + MRT
+    # Filter to 30-day window
+    in_window = filter_to_window(unique)
+    log.info(f'Events within next {SCRAPE_WINDOW_DAYS} days: {len(in_window)}')
+
+    # Enrich with geocoords + MRT + audience fields
     enriched = []
-    for e in unique:
+    for e in in_window:
         try:
             enriched.append(enrich(e))
             time.sleep(1.1)  # Nominatim rate limit: 1 req/sec

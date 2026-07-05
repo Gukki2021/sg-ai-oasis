@@ -150,3 +150,58 @@ body {
   text-transform: uppercase;
   color: var(--muted);
 }
+
+/* ─── Page nav (本周 / 本月) ──────────────────────────────────── */
+.page-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.page-nav-tab:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.5);
+}
+.page-nav-tab--active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ─── View switcher (本周版 / 完全版 / 地图版) ─────────────────── */
+.view-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--ink-100);
+  border-radius: 12px;
+  padding: 3px;
+}
+.view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+.view-tab:hover { color: var(--text); }
+.view-tab--active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
